@@ -17,80 +17,78 @@ MiyoFilters.satori_dictionary_initialize = {
   filter: function(argument, request, id, stash) {
     this.SatoriDictionaryLoader = {};
     this.SatoriDictionaryLoader.load_file = (function(_this) {
-      return function(file, options) {
+      return function(dictionary, file, options) {
         var str;
         str = fs.readFileSync(file, 'utf8');
-        return _this.SatoriDictionaryLoader.load_str(str, file, options);
+        return _this.SatoriDictionaryLoader.load_str(dictionary, str, file, options);
       };
     })(this);
-    this.SatoriDictionaryLoader.load_str = (function(_this) {
-      return function(str, filepath, _arg) {
-        var aitalk_id, content, current_entry, entries, entry, escape, line, lines, match, _i, _len, _results;
-        if (filepath == null) {
-          filepath = '(data)';
+    this.SatoriDictionaryLoader.load_str = function(dictionary, str, filepath, _arg) {
+      var aitalk_id, content, current_entry, entries, entry, escape, line, lines, match, _i, _len, _results;
+      if (filepath == null) {
+        filepath = '(data)';
+      }
+      aitalk_id = _arg.aitalk_id;
+      if (aitalk_id == null) {
+        aitalk_id = 'OnSatoriAITalk';
+      }
+      lines = str.split(/\r?\n/);
+      escape = false;
+      entries = {};
+      current_entry = null;
+      for (_i = 0, _len = lines.length; _i < _len; _i++) {
+        line = lines[_i];
+        if (!escape && (match = line.match(/^([＊＠])(.*)$/))) {
+          id = match[2];
+          if (!id.length) {
+            id = aitalk_id;
+          }
+          if (entries[id] == null) {
+            entries[id] = [];
+          }
+          current_entry = {
+            type: match[1],
+            value: []
+          };
+          entries[id].push(current_entry);
+        } else if ((current_entry != null) && (escape || !line.match(/^＃/))) {
+          if (line.length) {
+            if (escape) {
+              current_entry.value[current_entry.value.length - 1] += '\r\n' + line;
+            } else {
+              current_entry.value.push(line);
+            }
+          }
         }
-        aitalk_id = _arg.aitalk_id;
-        if (aitalk_id == null) {
-          aitalk_id = 'OnSatoriAITalk';
-        }
-        lines = str.split(/\r?\n/);
         escape = false;
-        entries = {};
-        current_entry = null;
-        for (_i = 0, _len = lines.length; _i < _len; _i++) {
-          line = lines[_i];
-          if (!escape && (match = line.match(/^([＊＠])(.*)$/))) {
-            id = match[2];
-            if (!id.length) {
-              id = aitalk_id;
-            }
-            if (entries[id] == null) {
-              entries[id] = [];
-            }
-            current_entry = {
-              type: match[1],
-              value: []
-            };
-            entries[id].push(current_entry);
-          } else if ((current_entry != null) && (escape || !line.match(/^＃/))) {
-            if (line.length) {
-              if (escape) {
-                current_entry.value[current_entry.value.length - 1] += '\r\n' + line;
-              } else {
-                current_entry.value.push(line);
-              }
-            }
-          }
-          escape = false;
-          if (line.match(/^(?:φ.|[^φ])*φ$/)) {
-            escape = true;
-          }
+        if (line.match(/^(?:φ.|[^φ])*φ$/)) {
+          escape = true;
         }
-        _results = [];
-        for (id in entries) {
-          content = entries[id];
-          if (_this.dictionary[id] == null) {
-            _this.dictionary[id] = [];
-          } else if (!(_this.dictionary[id] instanceof Array)) {
-            throw "satori_dictionary error: [" + filepath + "] dictionary id=" + id + " is not Array";
-          }
-          _results.push((function() {
-            var _j, _len1, _results1;
-            _results1 = [];
-            for (_j = 0, _len1 = content.length; _j < _len1; _j++) {
-              entry = content[_j];
-              if (entry.type === '＊') {
-                _results1.push(this.dictionary[id].push(entry.value.join('\r\n') + '\r\n'));
-              } else {
-                _results1.push(this.dictionary[id] = this.dictionary[id].concat(entry.value));
-              }
-            }
-            return _results1;
-          }).call(_this));
+      }
+      _results = [];
+      for (id in entries) {
+        content = entries[id];
+        if (dictionary[id] == null) {
+          dictionary[id] = [];
+        } else if (!(dictionary[id] instanceof Array)) {
+          throw "satori_dictionary error: [" + filepath + "] dictionary id=" + id + " is not Array";
         }
-        return _results;
-      };
-    })(this);
+        _results.push((function() {
+          var _j, _len1, _results1;
+          _results1 = [];
+          for (_j = 0, _len1 = content.length; _j < _len1; _j++) {
+            entry = content[_j];
+            if (entry.type === '＊') {
+              _results1.push(dictionary[id].push(entry.value.join('\r\n') + '\r\n'));
+            } else {
+              _results1.push(dictionary[id] = dictionary[id].concat(entry.value));
+            }
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    };
     return argument;
   }
 };
@@ -134,7 +132,7 @@ MiyoFilters.satori_dictionary_load = {
     }
     for (_l = 0, _len3 = filepaths.length; _l < _len3; _l++) {
       filepath = filepaths[_l];
-      this.SatoriDictionaryLoader.load_file(filepath, {
+      this.SatoriDictionaryLoader.load_file(this.dictionary, filepath, {
         aitalk_id: aitalk_id
       });
     }

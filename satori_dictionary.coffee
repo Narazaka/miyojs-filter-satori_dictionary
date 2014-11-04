@@ -9,10 +9,10 @@ unless MiyoFilters?
 
 MiyoFilters.satori_dictionary_initialize = type: 'through', filter: (argument, request, id, stash) ->
 	@SatoriDictionaryLoader = {}
-	@SatoriDictionaryLoader.load_file = (file, options) =>
+	@SatoriDictionaryLoader.load_file = (dictionary, file, options) =>
 		str = fs.readFileSync file, 'utf8'
-		@SatoriDictionaryLoader.load_str str, file, options
-	@SatoriDictionaryLoader.load_str = (str, filepath='(data)', {aitalk_id}) =>
+		@SatoriDictionaryLoader.load_str dictionary, str, file, options
+	@SatoriDictionaryLoader.load_str = (dictionary, str, filepath='(data)', {aitalk_id}) ->
 		aitalk_id ='OnSatoriAITalk' unless aitalk_id?
 		lines = str.split /\r?\n/
 		escape = false
@@ -37,15 +37,15 @@ MiyoFilters.satori_dictionary_initialize = type: 'through', filter: (argument, r
 			if line.match /^(?:φ.|[^φ])*φ$/
 				escape = true
 		for id, content of entries
-			if not @dictionary[id]?
-				@dictionary[id] = []
-			else if not (@dictionary[id] instanceof Array)
+			if not dictionary[id]?
+				dictionary[id] = []
+			else if not (dictionary[id] instanceof Array)
 				throw "satori_dictionary error: [#{filepath}] dictionary id=#{id} is not Array"
 			for entry in content
 				if entry.type == '＊'
-					@dictionary[id].push entry.value.join('\r\n') + '\r\n'
+					dictionary[id].push entry.value.join('\r\n') + '\r\n'
 				else
-					@dictionary[id] = @dictionary[id].concat entry.value
+					dictionary[id] = dictionary[id].concat entry.value
 	argument
 
 MiyoFilters.satori_dictionary_load = type: 'through', filter: (argument, request, id, stash) ->
@@ -70,7 +70,7 @@ MiyoFilters.satori_dictionary_load = type: 'through', filter: (argument, request
 	unless @SatoriDictionaryLoader?
 		@call_filters {filters: ['satori_dictionary_initialize']}, null
 	for filepath in filepaths
-		@SatoriDictionaryLoader.load_file filepath, aitalk_id: aitalk_id
+		@SatoriDictionaryLoader.load_file @dictionary, filepath, aitalk_id: aitalk_id
 	argument
 
 if module? and module.exports?

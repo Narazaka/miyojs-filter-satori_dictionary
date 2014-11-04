@@ -65,10 +65,14 @@ directoriesは名前にかかわらずそのフォルダ内の全ファイルを
 
 このフィルタを実行した時点でMiyoのインスタンスには
 
-- miyo.SatoriDictionaryLoader.load_file(file, options) - ファイル1つを里々辞書として読み込む
-- miyo.SatoriDictionaryLoader.load_str(str, filepath, options) - 文字列を里々辞書として読み込む
+- miyo.SatoriDictionaryLoader.load_file(dictionary, file, options) - ファイル1つを里々辞書として読み込む
+- miyo.SatoriDictionaryLoader.load_str(dictionary, str, filepath, options) - 文字列を里々辞書として読み込む
 
 が追加されています。
+
+dictionaryは辞書の連想配列です。
+
+file, strはそれぞれ読み込むファイル名と文字列です。
 
 filepathは任意で、エラー時のファイル名として扱われます。
 

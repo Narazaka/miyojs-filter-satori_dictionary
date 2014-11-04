@@ -1,6 +1,6 @@
 {
 	"name": "miyojs-filter-satori_dictionary",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "satori_dictionary - satori like dictionary loader",
 	"keywords": ["miyojs", "miyojs-filter"],
 	"main": "satori_dictionary.js",
